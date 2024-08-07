@@ -16,9 +16,10 @@ import { Input } from "@/components/ui/input";
 
 import { SignupValidation } from "@/lib/validation";
 import { Loader } from "lucide-react";
+import { createUserAccount } from "@/lib/appwrite/api";
 
 function SignupForm() {
-    const isLoading = true;
+    const isLoading = false;
 
   // 1. Define the form using formschema
   const form = useForm<z.infer<typeof SignupValidation>>({
@@ -32,8 +33,9 @@ function SignupForm() {
   });
 
   // 2. Define a submit handler
-  function onSubmit(values: z.infer<typeof SignupValidation>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof SignupValidation>) {
+    const newUser = await createUserAccount(values);
+    console.log(newUser)
   }
 
   return (

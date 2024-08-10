@@ -9,6 +9,9 @@
     }
   ],
   "compilerOptions": {
+    "allowUnusedLabels": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "baseUrl": ".",
     "paths": {
       "@/*": [

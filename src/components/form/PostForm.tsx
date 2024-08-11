@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import React from "react";
 import { Textarea } from "../ui/textarea";
-import FileUploader from "../shared/FileUploader";
+import SingleFileUploader from "../shared/FileUploader";
 
 const formSchema = z.object({
   username: z.string().min(2).max(50),
@@ -35,6 +35,14 @@ const PostForm: React.FC = () => {
     // ✅ This will be type-safe and validated.
     console.log(values);
   }
+
+  // 3. Handle file select
+  const handleFileSelect = (file: File | null) => {
+    if (file) {
+      console.log("Selected file:", file);
+      // Process the file (e.g., upload it to a server)
+    }
+  };
 
   return (
     <Form {...form}>
@@ -70,7 +78,7 @@ const PostForm: React.FC = () => {
             <FormItem>
               <FormLabel className="shad-form_label">Caption</FormLabel>
               <FormControl>
-                <FileUploader />
+                <SingleFileUploader onFileSelect={handleFileSelect} />
               </FormControl>
               <FormDescription>
                 This is your public display name.

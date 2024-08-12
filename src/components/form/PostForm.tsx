@@ -15,25 +15,55 @@ import { Input } from "@/components/ui/input";
 import React from "react";
 import { Textarea } from "../ui/textarea";
 import SingleFileUploader from "../shared/FileUploader";
+import { PostValidation } from "@/lib/validation";
+import { Models } from "appwrite";
+import { useCreatePost } from "@/lib/react-query/quaries-and-mutations";
+import { useUserContext } from "@/context/AuthContext";
+import { useToast } from "../ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
-const formSchema = z.object({
-  username: z.string().min(2).max(50),
-});
+// const formSchema = z.object({
+//   caption: z.string().min(2).max(5000),
+//   file: z.array();
+// });
 
-const PostForm: React.FC = () => {
+type PostFormProps = {
+  post?: Models.Document;
+};
+
+const PostForm: React.FC<PostFormProps> = ({ post }: PostFormProps) => {
+  const { mutateAsync: createPost, isPending: isCreatingPostPending } =
+    useCreatePost();
+
+  const { toast } = useToast();
+  const { user } = useUserContext();
+  const navigate = useNavigate();
+
   // 1. Define your form.
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof PostValidation>>({
+    resolver: zodResolver(PostValidation),
     defaultValues: {
-      username: "",
+      caption: post ? post?.caption : "",
+      files: [],
+      location: post ? post?.location : "",
+      tags: post ? post?.tags : "",
     },
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof PostValidation>) {
+    const newPost = await createPost({
+      caption: values.caption,
+      files: values.files,
+      location: values.location,
+      tags: values.tags,
+      userId: user.id,
+    });
+
+    if (!newPost) {
+      toast({ title: "Something went wrong while creating post." });
+    }
+    navigate("/");
   }
 
   // 3. Handle file select
@@ -41,6 +71,7 @@ const PostForm: React.FC = () => {
     if (file) {
       console.log("Selected file:", file);
       // Process the file (e.g., upload it to a server)
+      form.setValue("files", [file]);
     }
   };
 
@@ -76,9 +107,12 @@ const PostForm: React.FC = () => {
           name="files"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="shad-form_label">Caption</FormLabel>
+              <FormLabel className="shad-form_label">Upload file</FormLabel>
               <FormControl>
-                <SingleFileUploader onFileSelect={handleFileSelect} />
+                <SingleFileUploader
+                  onFileSelect={handleFileSelect}
+                  {...field}
+                />
               </FormControl>
               <FormDescription>
                 This is your public display name.
@@ -131,7 +165,11 @@ const PostForm: React.FC = () => {
           <Button type="button" className="shad-button_dark_4">
             Cancel
           </Button>
-          <Button type="submit" className="shad-button_primary">
+          <Button
+            type="submit"
+            className="shad-button_primary"
+            disabled={isCreatingPostPending}
+          >
             Submit
           </Button>
         </div>
